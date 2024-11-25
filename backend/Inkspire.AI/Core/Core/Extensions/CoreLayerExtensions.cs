@@ -8,7 +8,8 @@ using System.Reflection;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Builder;
-using Core.Service.PredictionService;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+using Core.Services;
 
 namespace Core.Extensions
 {
@@ -16,14 +17,14 @@ namespace Core.Extensions
     {
         public static IServiceCollection LoadCoreLayerExtension(this IServiceCollection services, IConfiguration configuration)
         {
-            var postgresUri = Environment.GetEnvironmentVariable("INKSPIRE_ConnectionString")
-                              ?? configuration.GetConnectionString("DefaultConnection");
+            services.AddHttpClient<IChatGroqService, ChatGroqService>();
 
-            var defaultConnectionString = ConvertPostgresUriToConnectionString(postgresUri);
+            var mysqlConnectionString = Environment.GetEnvironmentVariable("INKSPIRE_ConnectionString")
+                                 ?? configuration.GetConnectionString("DefaultConnection");
 
-            // Add ApplicationDbContext
+            // Add ApplicationDbContext with MySQL
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(defaultConnectionString));
+                options.UseMySql(mysqlConnectionString, ServerVersion.AutoDetect(mysqlConnectionString)));
 
             // Add JWT Authentication
             services.AddJwtAuthentication(configuration);
@@ -50,23 +51,9 @@ namespace Core.Extensions
             services.AddMediatR(Assembly.GetExecutingAssembly());
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
-            // Add PredictionService
-            services.AddHttpClient<IPredictionService, PredictionService>(client =>
-            {
-                client.BaseAddress = new Uri(configuration["PredictionApi:BaseUrl"] ?? "http://127.0.0.1:5000/");
-            });
+            // Register ChatGroqService
 
             return services;
-        }
-
-        private static string ConvertPostgresUriToConnectionString(string postgresUri)
-        {
-            var uri = new Uri(postgresUri);
-            var userInfo = uri.UserInfo.Split(':');
-            var username = userInfo[0];
-            var password = userInfo[1];
-
-            return $"Host={uri.Host};Port={uri.Port};Username={username};Password={password};Database={uri.AbsolutePath.TrimStart('/')};SSL Mode=Require;Trust Server Certificate=true";
         }
 
         public static IApplicationBuilder UseCoreLayerRecurringJobs(this IApplicationBuilder app)
