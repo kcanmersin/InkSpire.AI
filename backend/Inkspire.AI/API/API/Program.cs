@@ -46,6 +46,10 @@ builder.Host.UseSerilog((context, services, configuration) =>
 builder.Services.LoadCoreLayerExtension(builder.Configuration);
 builder.Services.AddMediatR(Assembly.GetExecutingAssembly());
 // Add services to the container.
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+});
 
 builder.Services.AddControllers(options =>
 {

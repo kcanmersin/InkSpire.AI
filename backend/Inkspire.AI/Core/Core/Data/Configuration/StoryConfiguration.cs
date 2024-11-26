@@ -12,14 +12,11 @@ namespace Core.Data.Configuration
                 .IsRequired()
                 .HasMaxLength(200);
 
-            builder.Property(s => s.Content)
-                .IsRequired();
-
             builder.Property(s => s.IsPublic)
                 .IsRequired();
 
             builder.Property(s => s.PageCount)
-                .IsRequired();
+                .IsRequired(true);
 
             builder.HasOne(s => s.CreatedBy)
                 .WithMany()

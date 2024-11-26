@@ -13,8 +13,7 @@ namespace Core.Data
         public DbSet<StoryImage> StoryImages { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Reaction> Reactions { get; set; }
-
-
+        public DbSet<Page> Pages { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -25,6 +24,7 @@ namespace Core.Data
             modelBuilder.ApplyConfiguration(new StoryImageConfiguration());
             modelBuilder.ApplyConfiguration(new CommentConfiguration());
             modelBuilder.ApplyConfiguration(new ReactionConfiguration());
+            modelBuilder.ApplyConfiguration(new PageConfiguration()); 
 
             SeedData(modelBuilder);
 
@@ -33,21 +33,25 @@ namespace Core.Data
 
         private void SeedData(ModelBuilder modelBuilder)
         {
-            var superAdminRoleId = Guid.NewGuid();
-            var adminRoleId = Guid.NewGuid();
-            var userRoleId = Guid.NewGuid();
+            var superAdminRoleId = Guid.Parse("C7A7A7A7-A7A7-A7A7-A7A7-A7A7A7A7A7A7");
+            var adminRoleId = Guid.Parse("B7B7B7B7-B7B7-B7B7-B7B7-B7B7B7B7B7B7");
+            var userRoleId = Guid.Parse("A7A7A7A7-A7A7-A7A7-A7A7-A7A7A7A7A7A7");
 
             modelBuilder.Entity<AppRole>().HasData(
                 new AppRole { Id = superAdminRoleId, Name = "SUPERADMIN", NormalizedName = "SUPERADMIN" },
                 new AppRole { Id = adminRoleId, Name = "ADMIN", NormalizedName = "ADMIN" },
                 new AppRole { Id = userRoleId, Name = "USER", NormalizedName = "USER" }
             );
+            
+            var superAdminId = Guid.Parse("D7D7D7D7-D7D7-D7D7-D7D7-D7D7D7D7D7D7");
+            var adminId = Guid.Parse("E7E7E7E7-E7E7-E7E7-E7E7-E7E7E7E7E7E7");
+            var userId = Guid.Parse("F7F7F7F7-F7F7-F7F7-F7F7-F7F7F7F7F7F7");
 
             var passwordHasher = new PasswordHasher<AppUser>();
 
             var superAdmin = new AppUser
             {
-                Id = Guid.NewGuid(),
+                Id = superAdminId,
                 UserName = "SUPERADMIN",
                 NormalizedUserName = "SUPERADMIN",
                 Email = "superadmin@example.com",
@@ -60,7 +64,7 @@ namespace Core.Data
 
             var admin = new AppUser
             {
-                Id = Guid.NewGuid(),
+                Id = adminId,
                 UserName = "ADMIN",
                 NormalizedUserName = "ADMIN",
                 Email = "admin@example.com",
@@ -73,7 +77,7 @@ namespace Core.Data
 
             var user = new AppUser
             {
-                Id = Guid.NewGuid(),
+                Id = userId,
                 UserName = "USER",
                 NormalizedUserName = "USER",
                 Email = "user@example.com",
@@ -87,9 +91,9 @@ namespace Core.Data
             modelBuilder.Entity<AppUser>().HasData(superAdmin, admin, user);
 
             modelBuilder.Entity<IdentityUserRole<Guid>>().HasData(
-                new IdentityUserRole<Guid> { UserId = superAdmin.Id, RoleId = superAdminRoleId },
-                new IdentityUserRole<Guid> { UserId = admin.Id, RoleId = adminRoleId },
-                new IdentityUserRole<Guid> { UserId = user.Id, RoleId = userRoleId }
+                new IdentityUserRole<Guid> { UserId = superAdminId, RoleId = superAdminRoleId },
+                new IdentityUserRole<Guid> { UserId = adminId, RoleId = adminRoleId },
+                new IdentityUserRole<Guid> { UserId = userId, RoleId = userRoleId }
             );
         }
     }
