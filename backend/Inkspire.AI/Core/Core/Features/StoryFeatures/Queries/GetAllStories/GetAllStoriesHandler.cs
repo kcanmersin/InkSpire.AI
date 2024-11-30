@@ -41,12 +41,12 @@ namespace Core.Features.StoryFeatures.Queries.GetAllStories
                     CreatedByName = $"{s.CreatedBy.Name} {s.CreatedBy.Surname}",
                     CreatedDate = s.CreatedDate,
                     CoverImage = s.CoverImage,
-                    Pages = s.Pages.Select(p => new PageDto 
-                    {
-                        Id = p.Id,
-                        PageNumber = p.PageNumber,
-                        Content = p.Content
-                    }).ToList()
+                    //Pages = s.Pages.Select(p => new PageDto 
+                    //{
+                    //    Id = p.Id,
+                    //    PageNumber = p.PageNumber,
+                    //    Content = p.Content
+                    //}).ToList()
                 })
                 .ToListAsync(cancellationToken);
 

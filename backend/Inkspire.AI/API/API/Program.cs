@@ -1,6 +1,7 @@
 using Core.Extensions;
 using Hangfire.Logging;
 using MediatR;
+using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
 using Serilog.Filters;
@@ -45,6 +46,8 @@ builder.Host.UseSerilog((context, services, configuration) =>
 });
 builder.Services.LoadCoreLayerExtension(builder.Configuration);
 builder.Services.AddMediatR(Assembly.GetExecutingAssembly());
+
+
 // Add services to the container.
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -57,13 +60,21 @@ builder.Services.AddControllers(options =>
 });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddServer(new OpenApiServer
+    {
+        Url = "http://localhost:5256",
+        Description = "Local Development Server"
+    });
+});
+
 
 builder.Services.AddMemoryCache();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllOrigins", builder =>
+    options.AddPolicy("AllowAll", builder =>
     {
         builder.AllowAnyOrigin()
                .AllowAnyMethod()
@@ -71,7 +82,12 @@ builder.Services.AddCors(options =>
     });
 });
 
+
+
 var app = builder.Build();
+
+app.UseCors("AllowAll");
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -18,6 +18,9 @@ namespace Core.Extensions
         public static IServiceCollection LoadCoreLayerExtension(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddHttpClient<IChatGroqService, ChatGroqService>();
+            //IImageGenerationService
+            services.AddHttpClient<IImageGenerationService, ImageGenerationService>();
+
 
             var mysqlConnectionString = Environment.GetEnvironmentVariable("INKSPIRE_ConnectionString")
                                  ?? configuration.GetConnectionString("DefaultConnection");

@@ -16,7 +16,7 @@
         public DateTime CreatedDate { get; set; }
         public byte[] CoverImage { get; set; }
 
-        public List<PageDto> Pages { get; set; } = new();
+        //public List<PageDto> Pages { get; set; } = new();
     }
 
     public class PageDto

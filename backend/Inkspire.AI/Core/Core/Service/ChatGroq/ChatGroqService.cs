@@ -7,7 +7,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Core.Services
@@ -15,8 +14,11 @@ namespace Core.Services
     public class ChatGroqService : IChatGroqService
     {
         private readonly HttpClient _httpClient;
+        private readonly ApplicationDbContext _context;
+        private readonly IImageGenerationService _imageGenerationService;
         private readonly string _apiKey;
-        private readonly string _baseUrl;
+        private readonly string _baseUrl = "https://api.groq.com/openai/v1/chat/completions";
+
         private readonly List<string> _models = new()
         {
             "llama-3.1-70b-versatile",
@@ -30,60 +32,25 @@ namespace Core.Services
             "gemma2-9b-it",
             "gemma-7b-it",
             "llama3-groq-70b-8192-tool-use-preview",
-            "llama3-groq-8b-8192-tool-use-preview",
+            "llama3-groq-8b-8192-tool-use-preview"
         };
 
-        private readonly ApplicationDbContext _context;
-
-        public ChatGroqService(HttpClient httpClient, ApplicationDbContext context)
+        public ChatGroqService(HttpClient httpClient, ApplicationDbContext context, IImageGenerationService imageGenerationService)
         {
             _httpClient = httpClient;
             _context = context;
+            _imageGenerationService = imageGenerationService;
             _apiKey = Environment.GetEnvironmentVariable("INKSPIRE_CHATGROQ_API_KEY");
-            _baseUrl = "https://api.groq.com/openai/v1/chat/completions";
         }
 
-        public async Task<object> FormatGeneratedStoryAsync(string title, string description, int pageCount = 5)
+        public async Task<List<Page>> FormatGeneratedStoryAsync(string title, string description, int pageCount = 5)
         {
             try
             {
-                Guid userId = Guid.Parse("e7e7e7e7-e7e7-e7e7-e7e7-e7e7e7e7e7e7");
-
+                // Generate raw story content
                 var rawStory = await GenerateStoryAsyncFull(title, description, pageCount);
 
-                var placeholderCoverImage = Encoding.UTF8.GetBytes("Placeholder cover image data");
-
-                var placeholderStoryImages = new List<StoryImage>
-        {
-            new StoryImage
-            {
-                Id = Guid.NewGuid(),
-                ImageData = Encoding.UTF8.GetBytes("Placeholder story image 1"),
-                CreatedDate = DateTime.UtcNow
-            },
-            new StoryImage
-            {
-                Id = Guid.NewGuid(),
-                ImageData = Encoding.UTF8.GetBytes("Placeholder story image 2"),
-                CreatedDate = DateTime.UtcNow
-            }
-        };
-
-                var story = new Story
-                {
-                    Title = title,
-                    IsPublic = true,
-                    PageCount = pageCount,
-                    CreatedById = userId,
-                    CreatedDate = DateTime.UtcNow,
-                    ModifiedDate = null,
-                    CoverImage = placeholderCoverImage,
-                    StoryImages = placeholderStoryImages,
-                    Comments = new List<Comment>(),
-                    Reactions = new List<Reaction>(),
-                    Pages = new List<Page>()
-                };
-
+                var pages = new List<Page>();
                 string[] pageContents = rawStory.Split(new[] { "\nPage " }, StringSplitOptions.RemoveEmptyEntries);
 
                 foreach (var pageContent in pageContents)
@@ -97,35 +64,24 @@ namespace Core.Services
                         pageText = pageContent.Substring(firstColonIndex + 1).Trim();
                     }
 
-
                     if (pageNumber > 0 && !string.IsNullOrWhiteSpace(pageText))
                     {
-                        story.Pages.Add(new Page
+                        pages.Add(new Page
                         {
                             PageNumber = pageNumber,
                             Content = pageText,
-                            Story = story,
                             CreatedDate = DateTime.UtcNow
                         });
                     }
                 }
 
-                await _context.Stories.AddAsync(story);
-                await _context.SaveChangesAsync();
-
-                return story;
+                return pages;
             }
             catch (Exception ex)
             {
-                return new
-                {
-                    Error = "An error occurred while formatting the story.",
-                    Details = ex.InnerException?.Message ?? ex.Message
-                };
+                throw new Exception("An error occurred while formatting the story.", ex);
             }
         }
-
-
 
 
 
@@ -199,14 +155,10 @@ Page {page}:";
                 }
 
                 storyContent.AppendLine($"Page {page}:\n{pageContent}\n");
-
                 previousPageContent += $"Page {page}:\n{pageContent}\n";
-
-                await Task.Delay(1000);
             }
 
-            storyContent.AppendLine("The End.");
-            return storyContent.ToString();
+            return storyContent.ToString().Trim();
         }
     }
 
