@@ -1,6 +1,7 @@
 ﻿using API.Contracts;
 using API.Contracts.Book;
 using API.Helper;
+using Core.Features.BookDetailQueries;
 using Core.Features.BookFeatures.Commands.CreateBook;
 using Core.Features.BookFeatures.Queries.GetAllBook;
 using Core.Features.BookFeatures.Queries.GetBookById;
@@ -61,7 +62,7 @@ namespace API.Controllers
 
         [HttpGet("{id}")]
         //[ResponseCache(Duration = 300, Location = ResponseCacheLocation.Client, NoStore = false)]
-        [Cache(600)]
+        //[Cache(600)]
         public async Task<IActionResult> GetBookById(Guid id)
         {
             var query = new GetBookByIdQuery { BookId = id };
@@ -96,7 +97,10 @@ namespace API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            //var query = new GetTestByBookIdQuery { BookId = request.BookId, UserId = request.UserId };
+            //userid can be nullable
             var query = new GetTestByBookIdQuery { BookId = request.BookId, UserId = request.UserId };
+
             var test = await _mediator.Send(query);
             return Ok(test);
         }
@@ -109,15 +113,50 @@ namespace API.Controllers
 
             var command = new SolveTestCommand
             {
-                TestId = request.TestId,
-                Answers = request.Answers
+                BookId = request.BookId,
+                UserId = request.UserId,
+                Answers = request.Answers.Select(a => new Core.Features.TestFeatures.Commands.SolveTest.QuestionAnswerDto
+                {
+                    QuestionText = a.QuestionText,
+                    Answer = a.Answer
+                }).ToList()
             };
 
             var result = await _mediator.Send(command);
-            if (!result.IsSuccess)
-                return BadRequest(new { Error = result.Error.Message });
-
-            return Ok(result.Value);
+            return Ok(result);
         }
+
+        [HttpGet("comments/{bookId}")]
+        public async Task<IActionResult> GetCommentsByBookId(Guid bookId)
+        {
+            var query = new BookDetail_GetCommentsByBookIdQuery.Query { BookId = bookId };
+            var comments = await _mediator.Send(query);
+            return Ok(comments);
+        }
+
+        [HttpGet("reactions/{bookId}")]
+        public async Task<IActionResult> GetReactionsByBookId(Guid bookId)
+        {
+            var query = new BookDetail_GetReactionsByBookIdQuery.Query { BookId = bookId };
+            var reactions = await _mediator.Send(query);
+            return Ok(reactions);
+        }
+
+        [HttpGet("details/{id}")]
+        public async Task<IActionResult> GetBookDetails(Guid id)
+        {
+            var query = new BookDetail_GetBookByIdQuery.Query { Id = id };
+            var bookDetails = await _mediator.Send(query);
+            return Ok(bookDetails);
+        }
+        //get profile book
+        [HttpGet("profile/{authorId}")]
+        public   async Task<IActionResult> GetProfileBooks(Guid authorId)
+        {
+            var query = new Profile_GetUsersBooks.Query { UserId = authorId };
+            var books = await _mediator.Send(query);
+            return Ok(books);
+        }
+
     }
 }

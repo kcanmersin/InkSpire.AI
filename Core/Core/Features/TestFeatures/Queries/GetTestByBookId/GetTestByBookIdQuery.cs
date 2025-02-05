@@ -12,6 +12,6 @@ namespace Core.Features.TestFeatures.Queries.GetTestByBookId
     {
         public Guid BookId { get; set; }
 
-        public Guid UserId { get; set; }
+        public Guid? UserId { get; set; }
     }
 }

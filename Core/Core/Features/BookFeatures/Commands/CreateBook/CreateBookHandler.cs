@@ -87,7 +87,25 @@ namespace Core.Features.BookFeatures.Commands.CreateBook
             }
 
             await _context.SaveChangesAsync(cancellationToken);
+            //  public async Task<Test> GenerateTestAsync(Book? book, AppUser? user, string level, string content, string language)
 
+            var generatedTest = await _groqLLMService.GenerateTestAsync(
+               book: book,
+               user: null,
+               level: book.Level,
+               content: book.Content,
+               language: book.Language
+           );
+
+            if (generatedTest.Questions != null && generatedTest.Questions.Any())
+            {
+                generatedTest.UserId = null; 
+                generatedTest.BookId = book.Id;
+
+                await _context.Test.AddAsync(generatedTest, cancellationToken);
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
             var response = new CreateBookResponse
             {
                 BookId = book.Id,

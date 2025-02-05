@@ -97,7 +97,8 @@ namespace Core.Features.UserFeatures.Login
                 Token = token,
                 Email = user.Email,
                 Name = user.Name,
-                Surname = user.Surname
+                Surname = user.Surname,
+                UserId = user.Id
             });
         }
 

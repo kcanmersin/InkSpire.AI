@@ -1,6 +1,6 @@
-﻿using Core.Data.Entity;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Core.Data.Entity;
 
 public class TestConfiguration : IEntityTypeConfiguration<Test>
 {
@@ -12,21 +12,16 @@ public class TestConfiguration : IEntityTypeConfiguration<Test>
 
         builder.HasMany(t => t.Questions)
                .WithOne()
-               .HasForeignKey("TestId") 
-               .OnDelete(DeleteBehavior.Cascade); 
+               .HasForeignKey("TestId")
+               .OnDelete(DeleteBehavior.Cascade);
 
         builder.Property(t => t.TotalScore)
                .IsRequired();
-        //generalfeedback
-        builder.Property(t => t.GeneralFeedback)
-               .HasMaxLength(1000);
 
+        builder.Property(t => t.GeneralFeedback)
+               .HasMaxLength(1000)
+               .IsRequired(false); 
         builder.Property(t => t.BookId)
                .IsRequired();
-
-        builder.Property(t => t.UserId)
-               .IsRequired();
-
-
     }
 }

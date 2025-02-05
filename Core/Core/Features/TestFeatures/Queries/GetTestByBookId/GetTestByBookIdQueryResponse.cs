@@ -11,9 +11,11 @@ namespace Core.Features.TestFeatures.Queries.GetTestByBookId
     {
         public Guid TestId { get; set; }
         public Guid BookId { get; set; }
-        public Guid UserId { get; set; }
+        public Guid? UserId { get; set; }
         public int TotalScore { get; set; }
         public List<QuestionDto> Questions { get; set; }
+        public string GeneralFeedback { get; set; }
+
     }
 
     public class QuestionDto
@@ -24,5 +26,7 @@ namespace Core.Features.TestFeatures.Queries.GetTestByBookId
         public string Answer { get; set; }
         public List<string> Choices { get; set; }
         public string QuestionType { get; set; }
+        public string Feedback { get; set; }
+
     }
 }

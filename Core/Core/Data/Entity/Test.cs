@@ -22,7 +22,7 @@ namespace Core.Data.Entity
         //bookId
         public Guid BookId { get; set; }
         //userId
-        public Guid UserId { get; set; }
+        public Guid? UserId { get; set; }
 
 
 

@@ -24,9 +24,12 @@ public class QuestionConfiguration : IEntityTypeConfiguration<Question>
         builder.Property(q => q.Answer)
                .HasMaxLength(1000);
         //feedback
+        //builder.Property(q => q.Feedback)
+        //       .HasMaxLength(1000);
+        //mkae feedback nullable
         builder.Property(q => q.Feedback)
-               .HasMaxLength(1000);
-
+               .HasMaxLength(1000)
+               .IsRequired(false);
         builder.Property(q => q.Choices)
                .HasConversion(
                    choices => JsonSerializer.Serialize(choices, (JsonSerializerOptions)null),

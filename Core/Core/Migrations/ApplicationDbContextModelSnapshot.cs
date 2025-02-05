@@ -50,7 +50,6 @@ namespace Core.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Feedback")
-                        .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("varchar(1000)");
 
@@ -106,7 +105,6 @@ namespace Core.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("GeneralFeedback")
-                        .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("varchar(1000)");
 
@@ -122,7 +120,7 @@ namespace Core.Migrations
                     b.Property<int>("TotalScore")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("char(36)");
 
                     b.HasKey("Id");
@@ -270,7 +268,7 @@ namespace Core.Migrations
                         {
                             Id = new Guid("d7d7d7d7-d7d7-d7d7-d7d7-d7d7d7d7d7d7"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "3e449d79-9635-4757-a1b5-b75503be64dd",
+                            ConcurrencyStamp = "16135f46-b24f-4544-911f-b3d7e1cafce8",
                             Email = "superadmin@example.com",
                             EmailConfirmed = false,
                             IsConfirmed = true,
@@ -279,7 +277,7 @@ namespace Core.Migrations
                             Name = "SUPERADMIN",
                             NormalizedEmail = "SUPERADMIN@EXAMPLE.COM",
                             NormalizedUserName = "SUPERADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGunIJyQEgk4CqAOGJuPHgapMTzTwd77u/8c8pZFNsYd/bVzCF4ddoSPsLsYIa5gAg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELceV3iFTnvN28wOfFHcgr+sWCSnH/YNNoXm2IfhoaylmrNDMaPfEFJTtlWFHPBYeA==",
                             PhoneNumberConfirmed = false,
                             Surname = "USER",
                             TwoFactorCode = "",
@@ -290,7 +288,7 @@ namespace Core.Migrations
                         {
                             Id = new Guid("e7e7e7e7-e7e7-e7e7-e7e7-e7e7e7e7e7e7"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f6c0db5a-92fb-4d55-94cc-cdf31ffec3b5",
+                            ConcurrencyStamp = "b2cd1e9c-c8c6-4da3-bca8-9e705b7971ac",
                             Email = "admin@example.com",
                             EmailConfirmed = false,
                             IsConfirmed = true,
@@ -299,7 +297,7 @@ namespace Core.Migrations
                             Name = "ADMIN",
                             NormalizedEmail = "ADMIN@EXAMPLE.COM",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEL4gxMluaTeI+8jRbZOuSyJs9Mua7f05OWdjuEaQqe99IieHetBwd0ithUbgram4aA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFOlgs3+76lwizWfTTET+mUg30AJeWQLqlgAYY2nssVOzFCpbsAMf8N9QhvNKICgpQ==",
                             PhoneNumberConfirmed = false,
                             Surname = "USER",
                             TwoFactorCode = "",
@@ -310,7 +308,7 @@ namespace Core.Migrations
                         {
                             Id = new Guid("f7f7f7f7-f7f7-f7f7-f7f7-f7f7f7f7f7f7"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b9169384-614e-4c91-8313-08436617f4bf",
+                            ConcurrencyStamp = "78792375-39ea-4134-86e4-58c97db1f246",
                             Email = "user@example.com",
                             EmailConfirmed = false,
                             IsConfirmed = true,
@@ -319,7 +317,7 @@ namespace Core.Migrations
                             Name = "USER",
                             NormalizedEmail = "USER@EXAMPLE.COM",
                             NormalizedUserName = "USER",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEVkUQ3XQUDPecusoErRQ4Zy441KpVii4iCflmcIN6S8VFLZV+UJUl+WckBw3XNdUA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEA3nc9iHTjaQXIxKb0Sa0pFUvxFl1dtnpW1rpko+bTUqpUqlOhcHMS9G/KW/FgOixw==",
                             PhoneNumberConfirmed = false,
                             Surname = "USER",
                             TwoFactorCode = "",

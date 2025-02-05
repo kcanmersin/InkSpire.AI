@@ -30,7 +30,6 @@ namespace Core.Features.CommentFeatures.Commands.CreateComment
                 UserId = request.UserId,
                 BookId = request.BookId
             };
-
             await _context.Comments.AddAsync(comment, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 

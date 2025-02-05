@@ -11,7 +11,7 @@ namespace Core.Features.TestFeatures.Commands.SolveTest
     {
         public SolveTestValidator()
         {
-            RuleFor(x => x.TestId).NotEmpty();
+            //RuleFor(x => x.TestId).NotEmpty();
             RuleFor(x => x.Answers).NotEmpty();
         }
 

@@ -63,7 +63,9 @@ namespace API.Controllers
                 Token = result.Value.Token,
                 Email = result.Value.Email,
                 Name = result.Value.Name,
-                Surname = result.Value.Surname
+                Surname = result.Value.Surname,
+                UserId = result.Value.UserId
+
             });
         }
         [HttpPost("verify-2fa")]

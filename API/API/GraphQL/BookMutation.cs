@@ -1,22 +1,41 @@
-﻿using Core.Data;
-using InkSpire.Core.Data.Entity;
+﻿using Core.Features.BookFeatures.Commands.CreateBook;
+using MediatR;
+using Core.Shared;
 
 namespace API.GraphQL
 {
     public class BookMutation
     {
-        public async Task<Book> CreateBook(
+        private readonly IMediator _mediator;
+
+        public BookMutation(IMediator mediator)
+        {
+            _mediator = mediator;
+        }
+
+        public async Task<CreateBookResponse> CreateBook(
             string title,
-            string content,
             string language,
             string level,
             Guid authorId,
-            [Service] ApplicationDbContext context)
+            [Service] IMediator mediator)
         {
-            var book = new Book(authorId, title, content, language, level);
-            context.Books.Add(book);
-            await context.SaveChangesAsync();
-            return book;
+            var command = new CreateBookCommand
+            {
+                AuthorId = authorId,
+                Title = title,
+                Language = language,
+                Level = level
+            };
+
+            var result = await mediator.Send(command);
+
+            if (!result.IsSuccess)
+            {
+                throw new Exception($"Book creation failed: {result.Error.Message}");
+            }
+
+            return result.Value;
         }
     }
 }

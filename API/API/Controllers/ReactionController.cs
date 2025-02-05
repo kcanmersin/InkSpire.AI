@@ -35,14 +35,15 @@ namespace API.Controllers
             if (!result.IsSuccess)
                 return BadRequest(new { Error = result.Error.Message });
 
-            return CreatedAtAction(nameof(CreateReaction),
-                new { id = result.Value.ReactionId },
-                new
-                {
-                    ReactionId = result.Value.ReactionId,
-                    UserId = result.Value.UserId,
-                    ReactionType = result.Value.ReactionType
-                });
+            //return CreatedAtAction(nameof(CreateReaction),
+            //    new { id = result.Value.ReactionId },
+            //    new
+            //    {
+            //        ReactionId = result.Value.ReactionId,
+            //        UserId = result.Value.UserId,
+            //        ReactionType = result.Value.ReactionType
+            //    });
+            return Ok(result);
         }
 
         [HttpGet("all")]

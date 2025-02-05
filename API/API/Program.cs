@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.OpenApi.Models;
 using System.IO.Compression;
 using System.Reflection;
-using API.GraphQL; // 📌 GraphQL Query ve Mutation'ları eklemek için
+using API.GraphQL;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +24,6 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// ✅ Redis Cache
 builder.Services.AddStackExchangeRedisCache(redisOptions =>
 {
     string connection = builder.Configuration.GetConnectionString("Redis");
@@ -33,18 +32,16 @@ builder.Services.AddStackExchangeRedisCache(redisOptions =>
 builder.Services.AddScoped<ICacheService, RedisCacheService>();
 builder.Services.AddMemoryCache();
 
-// ✅ CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", builder =>
+    options.AddPolicy("AllowAll", policyBuilder =>
     {
-        builder.AllowAnyOrigin()
-               .AllowAnyMethod()
-               .AllowAnyHeader();
+        policyBuilder.AllowAnyOrigin()
+                     .AllowAnyMethod()
+                     .AllowAnyHeader();
     });
 });
 
-// ✅ HTTP Sıkıştırma
 builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
 {
     options.Level = CompressionLevel.Fastest;
@@ -54,31 +51,32 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
     options.Level = CompressionLevel.Optimal;
 });
 
-// ✅ **GraphQL Servisini Doğru Şekilde Ekle**
+// GraphQL
 builder.Services
     .AddGraphQLServer()
-    .AddQueryType<BookQuery>()      // 📌 Query ekle
-    .AddMutationType<BookMutation>(); // 📌 Mutation ekle
+    .AddQueryType<BookQuery>()
+    .AddMutationType<BookMutation>()
+    .AddInMemorySubscriptions();
 
 var app = builder.Build();
 
-// ✅ GraphQL Middleware'i düzgün ekleyelim
-app.UseRouting();
-app.MapGraphQL(); // 🔹 Doğru kullanımı bu şekilde
-
 app.UseCors("AllowAll");
 
-// ✅ Swagger UI
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseAuthorization();
-app.UseMiddleware<API.Middleware.ActionLoggingMiddleware>();
+app.UseRouting();
 
-app.MapControllers();
+//app.UseMiddleware<API.Middleware.ActionLoggingMiddleware>();
+
+app.UseAuthorization();
+
+app.MapControllers();  
+app.MapGraphQL();      
+
 app.UseResponseCaching();
 
 app.Run();

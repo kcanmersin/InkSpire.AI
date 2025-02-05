@@ -331,7 +331,6 @@ No extra text. JSON array only.
         public async Task<Test> GenerateTestAsync(Book? book, AppUser? user, string level, string content, string language)
         {
             if (book == null) throw new ArgumentNullException(nameof(book));
-            if (user == null) throw new ArgumentNullException(nameof(user));
 
             var allQuestions = await GenerateAllQuestionsAsync(
                 multipleCount: 2,
@@ -346,11 +345,13 @@ No extra text. JSON array only.
             return new Test
             {
                 BookId = book.Id,
-                UserId = user.Id,
+                UserId = user?.Id,
                 Questions = allQuestions,
-                TotalScore = 0
+                TotalScore = 0,
+                GeneralFeedback = null 
             };
         }
+
         //        public async Task<Test> CheckTestAsync(Test test, string content)
         //        {
         //            var questionsText = new StringBuilder();
@@ -492,30 +493,32 @@ No extra text. JSON array only.
             }
 
             var prompt = $@"
-You are an AI teacher.
-We have a story:
--------------------------------------
-{content}
--------------------------------------
-We have a set of questions with user answers:
-{questionsText}
-Please evaluate each question's answer.
-Rules:
-1) Score each question on a scale of 0 or 10 (integer only).
-2) Provide a short feedback string for each question (e.g., 'Correct word', 'Incorrect answer', etc.).
-3) Also provide a 'generalFeedback' string summarizing overall performance.
-4) Return ONLY valid JSON in the following format:
+            You are an AI teacher.
+            We have a story:
+            -------------------------------------
+            {content}
+            -------------------------------------
+            We have a set of questions with user answers:
+            {questionsText}
+            Please evaluate each question's answer.
+            Rules:
+            1) Score each question on a scale of 0 or 10 (integer only).
+            2) Provide a short feedback string for each question (e.g., 'Correct word', 'Incorrect answer', etc.).
+            3) Also provide a 'general_feedback' string summarizing overall performance.
+            4) Return ONLY valid JSON in the following format:
 
-{{
-  ""generalFeedback"": ""..."",
-  ""questions"": [
-    {{ ""questionId"": ""{Guid.Empty}"", ""score"": 10, ""feedback"": ""..."" }},
-    ...
-  ]
-}}
+            {{
+              ""general_feedback"": ""Your overall feedback here."",
+              ""questions"": [
+                {{ ""questionId"": ""{Guid.Empty}"", ""score"": 10, ""feedback"": ""Your feedback here."" }},
+                {{ ""questionId"": ""{Guid.Empty}"", ""score"": 0, ""feedback"": ""Your feedback here."" }},
+                {{ ""questionId"": ""{Guid.Empty}"", ""score"": 10, ""feedback"": ""Your feedback here."" }},
+                {{ ""questionId"": ""{Guid.Empty}"", ""score"": 10, ""feedback"": ""Your feedback here."" }}
+              ]
+            }}
 
-Do not return any additional text, explanations, or formatting outside the JSON object.
-";
+            Do not return any additional text, explanations, or formatting outside the JSON object.
+            ";
 
             var requestBody = new GroqChatRequest(
                 Model: _settings.Model,
@@ -531,71 +534,115 @@ Do not return any additional text, explanations, or formatting outside the JSON 
                 var response = await _httpClient.SendAsync(request);
                 response.EnsureSuccessStatusCode();
 
-                var rawJson = await response.Content.ReadAsStringAsync();
-                if (string.IsNullOrWhiteSpace(rawJson))
+                var responseContent = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(responseContent);
+                var root = doc.RootElement;
+
+                var choices = root.GetProperty("choices");
+                var messageContent = choices[0].GetProperty("message").GetProperty("content").GetString();
+
+                if (string.IsNullOrWhiteSpace(messageContent))
+                    throw new Exception("Invalid response: messageContent is empty.");
+
+                messageContent = messageContent.Trim();
+
+                if (messageContent.StartsWith("```json"))
+                    messageContent = messageContent.Substring(7); 
+
+                if (messageContent.EndsWith("```"))
+                    messageContent = messageContent.Substring(0, messageContent.Length - 3);
+                messageContent = messageContent.Replace("\n", "").Replace("\r", "").Replace("\t", "").Trim();
+                messageContent = messageContent.Substring(3);
+
+                string generalFeedbackKey = "\"general_feedback\":";
+                int feedbackStartIndex = messageContent.IndexOf(generalFeedbackKey);
+                string generalFeedback = "";
+
+                if (feedbackStartIndex != -1)
                 {
-                    _logger.LogWarning("CheckTestAsync: Empty JSON response from LLM");
-                    return test;
+                    feedbackStartIndex += generalFeedbackKey.Length;
+                    int start = messageContent.IndexOf("\"", feedbackStartIndex) + 1;
+                    int end = messageContent.IndexOf("\"", start);
+                    generalFeedback = messageContent.Substring(start, end - start);
                 }
 
-                try
+                Console.WriteLine($"General Feedback: {generalFeedback}");
+
+                List<(string questionId, int score, string feedback)> questionsList = new();
+                string questionsKey = "\"questions\": [";
+                int questionsStartIndex = messageContent.IndexOf(questionsKey);
+
+                if (questionsStartIndex != -1)
                 {
-                    using var doc = JsonDocument.Parse(rawJson);
-                    var root = doc.RootElement;
+                    int currentIndex = questionsStartIndex + questionsKey.Length;
 
-                    if (root.TryGetProperty("choices", out var choices) && choices.GetArrayLength() > 0)
+                    while (true)
                     {
-                        var contentJson = choices[0].GetProperty("message").GetProperty("content").GetString();
-                        if (!string.IsNullOrWhiteSpace(contentJson))
-                        {
-                            var parsedResponse = JsonSerializer.Deserialize<CheckTestResultDto>(contentJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                            if (parsedResponse == null || parsedResponse.Questions == null)
-                            {
-                                _logger.LogWarning("CheckTestAsync: Invalid JSON structure");
-                                return test;
-                            }
+                        string questionIdKey = "\"questionId\": \"";
+                        string scoreKey = "\"score\": ";
+                        string feedbackKey = "\"feedback\": \"";
 
-                            test.GeneralFeedback = parsedResponse.GeneralFeedback;
-                            test.TotalScore = parsedResponse.Questions.Sum(q => q.Score);
-                            foreach (var checkedQuestion in parsedResponse.Questions)
-                            {
-                                var question = test.Questions.FirstOrDefault(q => q.Id.ToString() == checkedQuestion.QuestionId);
-                                if (question != null)
-                                {
-                                    question.Score = checkedQuestion.Score;
-                                    question.Feedback = checkedQuestion.Feedback;
-                                }
-                            }
-                        }
+                        int questionIdStart = messageContent.IndexOf(questionIdKey, currentIndex);
+                        if (questionIdStart == -1) break;
+
+                        questionIdStart += questionIdKey.Length;
+                        int questionIdEnd = messageContent.IndexOf("\"", questionIdStart);
+                        string questionId = messageContent.Substring(questionIdStart, questionIdEnd - questionIdStart);
+
+                        int scoreStart = messageContent.IndexOf(scoreKey, questionIdEnd) + scoreKey.Length;
+                        int scoreEnd = messageContent.IndexOf(",", scoreStart);
+                        int score = int.Parse(messageContent.Substring(scoreStart, scoreEnd - scoreStart).Trim());
+
+                        int feedbackStart = messageContent.IndexOf(feedbackKey, scoreEnd) + feedbackKey.Length;
+                        int feedbackEnd = messageContent.IndexOf("\"", feedbackStart);
+                        string feedback = messageContent.Substring(feedbackStart, feedbackEnd - feedbackStart);
+
+                        questionsList.Add((questionId, score, feedback));
+                        currentIndex = feedbackEnd;
                     }
                 }
-                catch (JsonException ex)
+                test.GeneralFeedback = generalFeedback;
+                test.TotalScore = questionsList.Sum(q => q.score);
+
+                foreach (var question in test.Questions)
                 {
-                    _logger.LogError(ex, "CheckTestAsync: Failed to parse JSON response");
+                    var evaluatedQuestion = questionsList.FirstOrDefault(q => q.questionId == question.Id.ToString());
+                    if (evaluatedQuestion != default)
+                    {
+                        question.Score = evaluatedQuestion.score;
+                        question.Feedback = evaluatedQuestion.feedback;
+                    }
+                }
+
+
+                foreach (var (questionId, score, feedback) in questionsList)
+                {
+                    Console.WriteLine($"QuestionId: {questionId}, Score: {score}, Feedback: {feedback}");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "CheckTestAsync: Request failed");
+                Console.WriteLine($"Error parsing response: {ex.Message}");
             }
 
             return test;
+
+
         }
 
-
-        public class CheckTestResultDto
+        public class EvaluationResponse
         {
-            [JsonPropertyName("generalFeedback")]
+            [JsonPropertyName("general_feedback")]
             public string GeneralFeedback { get; set; }
 
             [JsonPropertyName("questions")]
-            public List<CheckedQuestionDto> Questions { get; set; }
+            public List<EvaluatedQuestion> Questions { get; set; }
         }
 
-        public class CheckedQuestionDto
+        public class EvaluatedQuestion
         {
             [JsonPropertyName("questionId")]
-            public string QuestionId { get; set; }
+            public Guid QuestionId { get; set; }
 
             [JsonPropertyName("score")]
             public int Score { get; set; }
@@ -603,6 +650,9 @@ Do not return any additional text, explanations, or formatting outside the JSON 
             [JsonPropertyName("feedback")]
             public string Feedback { get; set; }
         }
+
+
+
 
 
     }
