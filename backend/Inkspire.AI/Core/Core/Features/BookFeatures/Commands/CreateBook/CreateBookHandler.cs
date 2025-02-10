@@ -2,9 +2,8 @@
 using Core.Shared;
 using FluentValidation;
 using InkSpire.Core.Data.Entity;
-
 using MediatR;
-using InkSpire.Application.Abstractions; 
+using InkSpire.Application.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -12,6 +11,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Core.ElasticSearch;
+using RabbitMQ.Client;
+using System.Text;
+using System.Text.Json;
 
 namespace Core.Features.BookFeatures.Commands.CreateBook
 {
@@ -22,18 +24,22 @@ namespace Core.Features.BookFeatures.Commands.CreateBook
         private readonly IGroqLLM _groqLLMService;
         private readonly IImageGenerationService _imageGenerationService;
         private readonly IElasticsearchService _elasticsearchService;
+        private readonly IConnection _rabbitMqConnection;
+
         public CreateBookHandler(
             ApplicationDbContext context,
             IValidator<CreateBookCommand> validator,
             IGroqLLM groqLLMService,
             IImageGenerationService imageGenerationService,
-            IElasticsearchService elasticsearchService)
+            IElasticsearchService elasticsearchService,
+            IConnection rabbitMqConnection)
         {
             _context = context;
             _validator = validator;
             _groqLLMService = groqLLMService;
             _imageGenerationService = imageGenerationService;
             _elasticsearchService = elasticsearchService;
+            _rabbitMqConnection = rabbitMqConnection;
         }
 
         public async Task<Result<CreateBookResponse>> Handle(CreateBookCommand request, CancellationToken cancellationToken)
@@ -61,36 +67,35 @@ namespace Core.Features.BookFeatures.Commands.CreateBook
 
             await _context.Books.AddAsync(book, cancellationToken);
 
-            var imageIdeas = await _groqLLMService.GetImageIdeasAsync(book.Content);
-            if (imageIdeas == null || imageIdeas.Count == 0)
-            {
-                imageIdeas = new List<string>
-                {
-                    $"Cover art for {request.Title}",
-                    "Interior illustration #1",
-                    "Interior illustration #2"
-                };
-            }
+            //var imageIdeas = await _groqLLMService.GetImageIdeasAsync(book.Content);
+            //if (imageIdeas == null || imageIdeas.Count == 0)
+            //{
+            //    imageIdeas = new List<string>
+            //    {
+            //        $"Cover art for {request.Title}",
+            //        "Interior illustration #1",
+            //        "Interior illustration #2"
+            //    };
+            //}
 
-            foreach (var idea in imageIdeas)
-            {
-                try
-                {
-                    var imageBytes = await _imageGenerationService.GenerateImageAsync(idea);
-                    if (imageBytes != null && imageBytes.Length > 0)
-                    {
-                        var bookImage = new BookImage(book.Id, imageBytes);
-                        await _context.BookImages.AddAsync(bookImage, cancellationToken);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Image generation failed for idea '{idea}': {ex.Message}");
-                }
-            }
+            //foreach (var idea in imageIdeas)
+            //{
+            //    try
+            //    {
+            //        var imageBytes = await _imageGenerationService.GenerateImageAsync(idea);
+            //        if (imageBytes != null && imageBytes.Length > 0)
+            //        {
+            //            var bookImage = new BookImage(book.Id, imageBytes);
+            //            await _context.BookImages.AddAsync(bookImage, cancellationToken);
+            //        }
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        Console.WriteLine($"Image generation failed for idea '{idea}': {ex.Message}");
+            //    }
+            //}
 
             await _context.SaveChangesAsync(cancellationToken);
-            //  public async Task<Test> GenerateTestAsync(Book? book, AppUser? user, string level, string content, string language)
 
             var generatedTest = await _groqLLMService.GenerateTestAsync(
                book: book,
@@ -102,7 +107,7 @@ namespace Core.Features.BookFeatures.Commands.CreateBook
 
             if (generatedTest.Questions != null && generatedTest.Questions.Any())
             {
-                generatedTest.UserId = null; 
+                generatedTest.UserId = null;
                 generatedTest.BookId = book.Id;
 
                 await _context.Test.AddAsync(generatedTest, cancellationToken);
@@ -110,6 +115,9 @@ namespace Core.Features.BookFeatures.Commands.CreateBook
 
             await _context.SaveChangesAsync(cancellationToken);
             await _elasticsearchService.CreateDocumentAsync(book);
+
+            PublishBookCreatedEvent(book);
+
             var response = new CreateBookResponse
             {
                 BookId = book.Id,
@@ -117,6 +125,17 @@ namespace Core.Features.BookFeatures.Commands.CreateBook
             };
 
             return Result.Success(response);
+        }
+
+        private void PublishBookCreatedEvent(Book book)
+        {
+            using var channel = _rabbitMqConnection.CreateModel();
+            channel.QueueDeclare(queue: "book_created", durable: true, exclusive: false, autoDelete: false, arguments: null);
+
+            var bookEvent = new { BookId = book.Id, Title = book.Title };
+            var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(bookEvent));
+
+            channel.BasicPublish(exchange: "", routingKey: "book_created", basicProperties: null, body: body);
         }
     }
 }

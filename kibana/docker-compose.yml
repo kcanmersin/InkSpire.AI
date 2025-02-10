@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # 🔹 Backend API (ASP.NET Core)
+  backend:
+    build:
+      context: .  # Ana dizini kullanarak erişim sağla
+      dockerfile: backend/Inkspire.AI/API/API/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=localhost;Port=3306;Database=mydb;Uid=root;Pwd=root;SslMode=None;AllowPublicKeyRetrieval=True;
+    depends_on:
+      - elasticsearch
+    networks:
+      - app_network
+
+  # 🔹 Elasticsearch
+  elasticsearch:
+    image: elasticsearch:8.15.0
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - app_network
+
+  # 🔹 Kibana
+  kibana:
+    image: kibana:8.14.3
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - app_network
+
+# 🔹 Volumes (Kalıcı Depolama)
+volumes:
+  es_data:
+    driver: local
+
+# 🔹 Network Tanımları
+networks:
+  app_network:
+    driver: bridge

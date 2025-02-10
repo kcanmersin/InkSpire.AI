@@ -124,7 +124,7 @@ namespace InkSpire.Infrastructure.Services
 
         public async Task<string> GenerateContentAsync(string title, string language, string level)
         {
-            var userMessage = $"Write a very very long story titled '{title}' in {language} language at a {level} level. Return only the story text.";
+            var userMessage = $"Write a  long story titled '{title}' in {language} language at a {level} level. Return only the story text.";
 
             var requestBody = new GroqChatRequest(
                 Model: _settings.Model,

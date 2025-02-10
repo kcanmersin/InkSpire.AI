@@ -6,17 +6,13 @@ namespace InkSpire.Core.Data.Entity
 {
     public class Comment : EntityBase
     {
-        public Guid Id { get;  set; }
-        public Guid UserId { get;  set; }
-        public string Text { get;  set; }
+        public Guid Id { get; set; }
+        public Guid UserId { get; set; }
+        public string Text { get; set; }
 
-        public Guid BookId { get;  set; }
-        public Book Book { get;  set; }
+        public Guid BookId { get; set; }
+        public Book Book { get; set; }
 
-        private readonly List<Reaction> _reactions = new();
-        public IReadOnlyCollection<Reaction> Reactions => _reactions.AsReadOnly();
-
-
-
+        public List<Reaction> Reactions { get; set; } = new List<Reaction>();
     }
 }

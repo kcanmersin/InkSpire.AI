@@ -13,6 +13,8 @@ using Core.Services;
 using InkSpire.Application.Abstractions;
 using InkSpire.Infrastructure.Services;
 using Core.Service.Email;
+using RabbitMQ.Client;
+using Core.Service.RabbitMQ;
 
 namespace Core.Extensions
 {
@@ -81,6 +83,14 @@ namespace Core.Extensions
                     client.BaseAddress = new Uri("https://api-inference.huggingface.co/");
                 });
 
+            services.AddSingleton(sp =>
+           {
+               var factory = new ConnectionFactory() { HostName = "localhost" };
+               return factory.CreateConnection();
+           });
+
+            services.AddSingleton<IMessagePublisher, RabbitMQPublisher>();
+            services.AddHostedService<RabbitMQConsumer>();
             return services;
         }
 

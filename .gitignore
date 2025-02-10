@@ -83,3 +83,4 @@ yarn-error.log
 .env
 backend/Inkspire.AI/API/API/Logs/2025-01-28_action_log.txt
 *.txt
+backend/Inkspire.AI/API/API/appsettings.json

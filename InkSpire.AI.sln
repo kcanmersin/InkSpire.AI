@@ -10,6 +10,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API", "backend\Inkspire.AI\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "backend\Inkspire.AI\Core\Core\Core.csproj", "{FE229E17-959C-45F5-928D-6968BA019942}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{24F4B0C3-0DCA-4F5A-A2F6-C068F8D31069}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject", "backend\Inkspire.AI\Test\TestProject\TestProject.csproj", "{60E1B240-6E0E-4D65-A61D-FF667D060462}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +28,10 @@ Global
 		{FE229E17-959C-45F5-928D-6968BA019942}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FE229E17-959C-45F5-928D-6968BA019942}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FE229E17-959C-45F5-928D-6968BA019942}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60E1B240-6E0E-4D65-A61D-FF667D060462}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60E1B240-6E0E-4D65-A61D-FF667D060462}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60E1B240-6E0E-4D65-A61D-FF667D060462}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60E1B240-6E0E-4D65-A61D-FF667D060462}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -31,6 +39,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{5D4A7EA6-F216-4A47-BC70-4A54E6D2D7D5} = {D82C56D6-B2CD-F611-9E31-04638F7EC30E}
 		{FE229E17-959C-45F5-928D-6968BA019942} = {FBF56CC3-7AE6-AD2D-3F14-7F97FD322CD6}
+		{60E1B240-6E0E-4D65-A61D-FF667D060462} = {24F4B0C3-0DCA-4F5A-A2F6-C068F8D31069}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DEFC1757-389B-4808-85FB-571A71C9A905}
