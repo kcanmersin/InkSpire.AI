@@ -94,7 +94,8 @@ namespace Core.Features.BookFeatures.Commands.CreateBook
             //        Console.WriteLine($"Image generation failed for idea '{idea}': {ex.Message}");
             //    }
             //}
-
+            //sleep 10 second
+            await Task.Delay(3000);
             await _context.SaveChangesAsync(cancellationToken);
 
             var generatedTest = await _groqLLMService.GenerateTestAsync(
@@ -130,12 +131,12 @@ namespace Core.Features.BookFeatures.Commands.CreateBook
         private void PublishBookCreatedEvent(Book book)
         {
             using var channel = _rabbitMqConnection.CreateModel();
-            channel.QueueDeclare(queue: "book_created", durable: true, exclusive: false, autoDelete: false, arguments: null);
+            channel.QueueDeclare(queue: "bookcreated", durable: true, exclusive: false, autoDelete: false, arguments: null);
 
             var bookEvent = new { BookId = book.Id, Title = book.Title };
             var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(bookEvent));
 
-            channel.BasicPublish(exchange: "", routingKey: "book_created", basicProperties: null, body: body);
+            channel.BasicPublish(exchange: "", routingKey: "bookcreated", basicProperties: null, body: body);
         }
     }
 }

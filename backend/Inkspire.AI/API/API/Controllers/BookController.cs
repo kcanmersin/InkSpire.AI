@@ -30,12 +30,14 @@ namespace API.Controllers
         private readonly IElasticsearchService _elasticService;
         //config
         private readonly IConfiguration _configuration;
+        private readonly IMessagePublisher _messagePublisher;
 
-        public BookController(IMediator mediator, IElasticsearchService elasticService, IConfiguration configuration)
+        public BookController(IMediator mediator, IElasticsearchService elasticService, IConfiguration configuration, IMessagePublisher messagePublisher)
         {
             _mediator = mediator;
             _elasticService = elasticService;
             _configuration = configuration;
+            _messagePublisher = messagePublisher;
         }
         [HttpPost("sync-elasticsearch")]
         public async Task<IActionResult> SyncDatabaseToElasticsearch()
@@ -44,8 +46,32 @@ namespace API.Controllers
             return Ok("Tüm kitaplar Elasticsearch'e aktarıldı.");
         }
 
+        //[HttpPost("create")]
+        //public async Task<IActionResult> CreateBook([FromBody] CreateBookRequest request)
+        //{
+        //    var command = new CreateBookCommand
+        //    {
+        //        AuthorId = request.AuthorId,
+        //        Title = request.Title,
+        //        Language = request.Language,
+        //        Level = request.Level
+        //    };
+
+        //    var result = await _mediator.Send(command);
+
+        //    if (!result.IsSuccess)
+        //        return BadRequest(new { Error = result.Error.Message });
+
+        //    return CreatedAtAction(nameof(CreateBook),
+        //        new { id = result.Value.BookId },
+        //        new
+        //        {
+        //            BookId = result.Value.BookId,
+        //            Title = result.Value.Title
+        //        });
+        //}
         [HttpPost("create")]
-        public async Task<IActionResult> CreateBook([FromBody] CreateBookRequest request)
+        public IActionResult CreateBook([FromBody] CreateBookRequest request)
         {
             var command = new CreateBookCommand
             {
@@ -55,18 +81,9 @@ namespace API.Controllers
                 Level = request.Level
             };
 
-            var result = await _mediator.Send(command);
+            _messagePublisher.Publish("book_create_queue", command);
 
-            if (!result.IsSuccess)
-                return BadRequest(new { Error = result.Error.Message });
-
-            return CreatedAtAction(nameof(CreateBook),
-                new { id = result.Value.BookId },
-                new
-                {
-                    BookId = result.Value.BookId,
-                    Title = result.Value.Title
-                });
+            return Accepted(new { Message = "Kitap oluşturma kuyruğa alındı!" });
         }
 
 

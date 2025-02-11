@@ -7,7 +7,12 @@ namespace Core.Service.Hubs
     {
         public async Task NotifyBookCreated(string bookTitle)
         {
-            await Clients.All.SendAsync("BookCreated", bookTitle);
+            await Clients.All.SendAsync("bookcreated", bookTitle);
+        }
+
+        public async Task SendTestMessage()
+        {
+            await Clients.All.SendAsync("BookCreated", "Test Kitap");
         }
     }
 }

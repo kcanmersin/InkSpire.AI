@@ -15,6 +15,8 @@ using InkSpire.Infrastructure.Services;
 using Core.Service.Email;
 using RabbitMQ.Client;
 using Core.Service.RabbitMQ;
+using Microsoft.AspNetCore.SignalR;
+using Core.Service.Hubs;
 
 namespace Core.Extensions
 {
@@ -22,17 +24,14 @@ namespace Core.Extensions
     {
         public static IServiceCollection LoadCoreLayerExtension(this IServiceCollection services, IConfiguration configuration)
         {
-
             services.AddDbContext<ApplicationDbContext>(options =>
             {
                 var connectionString = configuration.GetConnectionString("DefaultConnection");
                 options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
             });
 
-            // Add JWT Authentication
             services.AddJwtAuthentication(configuration);
 
-            // Add Identity
             services.AddIdentity<AppUser, AppRole>(options =>
             {
                 options.Password.RequiredLength = 5;
@@ -40,9 +39,7 @@ namespace Core.Extensions
                 options.Password.RequireLowercase = false;
                 options.Password.RequireUppercase = false;
                 options.Password.RequireNonAlphanumeric = false;
-
                 options.User.RequireUniqueEmail = true;
-
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
                 options.Lockout.AllowedForNewUsers = true;
@@ -50,32 +47,24 @@ namespace Core.Extensions
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
-            // Add MediatR and FluentValidation
             services.AddMediatR(Assembly.GetExecutingAssembly());
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
             services.AddTransient<IEmailService, EmailService>();
-            //Groq
+
             var groqSection = configuration.GetSection("GroqLLM");
             services.Configure<GroqLLMSettings>(groqSection);
             var groqSettings = groqSection.Get<GroqLLMSettings>();
             services.AddHttpClient<GroqLLMService>();
 
-            // IGroqLLM
             services.AddSingleton<IGroqLLM>(sp =>
             {
                 var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<GroqLLMService>>();
                 var httpClientFactory = sp.GetRequiredService<System.Net.Http.IHttpClientFactory>();
                 var httpClient = httpClientFactory.CreateClient(typeof(GroqLLMService).Name);
 
-                return new GroqLLMService(
-                    groqSettings,
-                    httpClient,
-                    logger
-                );
+                return new GroqLLMService(groqSettings, httpClient, logger);
             });
-            // IImageGenerationService
-            //services.AddHttpClient<IImageGenerationService, ImageGenerationService>();
-            //hugh face
+
             services.Configure<HuggingFaceSettings>(configuration.GetSection("HuggingFace"));
             services.AddHttpClient<IImageGenerationService, HuggingFaceImageGenerationService>()
                 .ConfigureHttpClient(client =>
@@ -84,13 +73,23 @@ namespace Core.Extensions
                 });
 
             services.AddSingleton(sp =>
-           {
-               var factory = new ConnectionFactory() { HostName = "localhost" };
-               return factory.CreateConnection();
-           });
+            {
+                var factory = new ConnectionFactory()
+                {
+                    HostName = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true" ? "rabbitmq-server" : "localhost",
+                    Port = 5672,
+                    UserName = "guest",
+                    Password = "guest"
+                };
+
+                return factory.CreateConnection();
+            });
 
             services.AddSingleton<IMessagePublisher, RabbitMQPublisher>();
             services.AddHostedService<RabbitMQConsumer>();
+            services.AddHostedService<BookCreateQueueConsumer>();
+            services.AddSignalR();
+
             return services;
         }
 

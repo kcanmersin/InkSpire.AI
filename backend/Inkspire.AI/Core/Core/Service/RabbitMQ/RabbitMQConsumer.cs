@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
 namespace Core.Service.RabbitMQ
 {
     public class RabbitMQConsumer : BackgroundService
@@ -26,7 +27,8 @@ namespace Core.Service.RabbitMQ
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             var channel = _connection.CreateModel();
-            channel.QueueDeclare(queue: "book_created", durable: true, exclusive: false, autoDelete: false, arguments: null);
+
+            channel.QueueDeclare(queue: "bookcreated", durable: true, exclusive: false, autoDelete: false, arguments: null);
 
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += async (model, ea) =>
@@ -39,12 +41,12 @@ namespace Core.Service.RabbitMQ
                 var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
                 var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<BookHub>>();
 
+                await hubContext.Clients.All.SendAsync("bookcreated", bookEvent.Title);
                 await mediator.Publish(bookEvent);
-
-                await hubContext.Clients.All.SendAsync("BookCreated", bookEvent.Title);
+                channel.BasicAck(ea.DeliveryTag, multiple: false);
             };
 
-            channel.BasicConsume(queue: "book_created", autoAck: true, consumer: consumer);
+            channel.BasicConsume(queue: "bookcreated", autoAck: false, consumer: consumer);
 
             while (!stoppingToken.IsCancellationRequested)
             {

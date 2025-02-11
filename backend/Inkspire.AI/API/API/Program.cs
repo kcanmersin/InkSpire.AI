@@ -9,7 +9,9 @@ using API.GraphQL;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
 using Prometheus;
-using API.Hubs;
+using Core.Service.Hubs;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,13 +28,44 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+    {
+        var ipAddress = httpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(ipAddress, key =>
+            new FixedWindowRateLimiterOptions
+            {
+                Window = TimeSpan.FromSeconds(10),
+                PermitLimit = 1000,
+                QueueLimit = 1000,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+            });
+    });
+
+    options.OnRejected = async (context, token) =>
+    {
+        var ipAddress = context.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "unknown";
+
+        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogWarning($"Rate limit exceeded for IP: {ipAddress}");
+
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        await context.HttpContext.Response.WriteAsync($"Rate limit exceeded! Try Later.....", token);
+    };
+});
+
+
+
 builder.Services.LoadCoreLayerExtension(builder.Configuration);
 builder.Services.AddMediatR(Assembly.GetExecutingAssembly());
 
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
-
+//builder.Services.AddSignalR();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "InkSpire API", Version = "v1" });
@@ -56,11 +89,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policyBuilder =>
     {
-        policyBuilder.AllowAnyOrigin()
+        policyBuilder.WithOrigins("http://localhost:5173") 
                      .AllowAnyMethod()
-                     .AllowAnyHeader();
+                     .AllowAnyHeader()
+                     .AllowCredentials();
     });
 });
+
 
 builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
 {
@@ -80,6 +115,7 @@ builder.Services
 var app = builder.Build();
 
 app.UseCors("AllowAll");
+app.UseRateLimiter();
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>
@@ -89,17 +125,17 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseRouting();
+
 app.UseMiddleware<API.Middleware.ActionLoggingMiddleware>();
 app.UseAuthorization();
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapMetrics(); 
 });
-app.MapHub<BookHub>("/bookHub");
 
+app.MapHub<BookHub>("/bookHub");
 app.MapControllers();
 app.MapGraphQL();
-
 app.UseResponseCaching();
 
 app.Run();
