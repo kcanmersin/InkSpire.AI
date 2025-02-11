@@ -1,5 +1,4 @@
-﻿using InkSpire.Application.Abstractions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,13 +6,13 @@ using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace InkSpire.Infrastructure.Services
+namespace Core.Service.IImageGeneration
 {
     public class ImageGenerationService : IImageGenerationService
     {
         private readonly HttpClient _httpClient;
         private const string ApiUrl = "https://api.stability.ai/v1/generation/stable-diffusion-v1-6/text-to-image";
-        private const string ApiKey = "sk-vhuGGBpx5dJCAlxkvdJCSXNAsUuyMriaDaiYg6l88RI47HVE"; 
+        private const string ApiKey = "sk-vhuGGBpx5dJCAlxkvdJCSXNAsUuyMriaDaiYg6l88RI47HVE";
 
         public ImageGenerationService(HttpClient httpClient)
         {

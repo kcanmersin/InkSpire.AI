@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using InkSpire.Application.Abstractions;
+using Core.Service.IImageGeneration;
 
 namespace Core.Services
 {

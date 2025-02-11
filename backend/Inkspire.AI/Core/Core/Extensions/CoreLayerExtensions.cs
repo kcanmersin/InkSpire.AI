@@ -17,6 +17,8 @@ using RabbitMQ.Client;
 using Core.Service.RabbitMQ;
 using Microsoft.AspNetCore.SignalR;
 using Core.Service.Hubs;
+using Core.Service.Storage;
+using Core.Service.IImageGeneration;
 
 namespace Core.Extensions
 {
@@ -89,6 +91,16 @@ namespace Core.Extensions
             services.AddHostedService<RabbitMQConsumer>();
             services.AddHostedService<BookCreateQueueConsumer>();
             services.AddSignalR();
+            //add
+            //services.AddSingleton<WasabiS3Service>();
+
+            //localstorage
+            services.AddSingleton<LocalStorageService>();
+            services.AddSingleton<WasabiS3StorageService>();
+            //services.AddSingleton<CloudinaryStorageService>();
+
+            services.AddScoped<CloudinaryStorageService>(); 
+
 
             return services;
         }

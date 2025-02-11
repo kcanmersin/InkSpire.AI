@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace InkSpire.Application.Abstractions
+namespace Core.Service.IImageGeneration
 {
     public interface IImageGenerationService
     {

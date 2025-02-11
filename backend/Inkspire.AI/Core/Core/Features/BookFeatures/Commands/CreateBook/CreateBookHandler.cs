@@ -14,6 +14,7 @@ using Core.ElasticSearch;
 using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
+using Core.Service.IImageGeneration;
 
 namespace Core.Features.BookFeatures.Commands.CreateBook
 {

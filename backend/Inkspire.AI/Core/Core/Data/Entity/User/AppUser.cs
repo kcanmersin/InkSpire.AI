@@ -34,6 +34,9 @@ namespace Core.Data.Entity.User
 
         public List<Word> Words { get; set; } = new List<Word>();
 
+
+        public string? ProfileImageUrl { get; set; }
+
     }
     public class Word : EntityBase
     {

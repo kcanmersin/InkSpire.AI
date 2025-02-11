@@ -56,8 +56,6 @@ public class CommentHandlerTests
 
         // Act
         var result = await _createHandler.Handle(request, CancellationToken.None);
-
-        // Print the result
         _output.WriteLine($"Result Success: {result.IsSuccess}, Comment ID: {result.Value?.Id}, Text: {result.Value?.Text}");
 
         // Assert

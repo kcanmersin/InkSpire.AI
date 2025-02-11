@@ -16,6 +16,8 @@
 	  <PackageReference Include="AspNetCore.HealthChecks.Npgsql" Version="8.0.0" />
 	  <PackageReference Include="AspNetCore.HealthChecks.UI" Version="8.0.0" />
 	  <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="8.0.0" />
+	  <PackageReference Include="AWSSDK.S3" Version="3.7.414.2" />
+	  <PackageReference Include="CloudinaryDotNet" Version="1.27.3" />
 	  <PackageReference Include="Confluent.Kafka" Version="2.5.2" />
 	  <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.17.1" />
 	  <PackageReference Include="Elasticstretch.DependencyInjection" Version="1.2.0" />
@@ -58,10 +60,6 @@
 	  <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.7.0" />
 	  <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.1" />
 	  <PackageReference Include="Xamarin.UITest" Version="4.4.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Service\IImageGeneration\" />
   </ItemGroup>
 
 </Project>

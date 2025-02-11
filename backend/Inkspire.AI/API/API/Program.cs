@@ -12,6 +12,7 @@ using Prometheus;
 using Core.Service.Hubs;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
+using API.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -75,6 +76,8 @@ builder.Services.AddSwaggerGen(c =>
         Url = "/",
         Description = "Local Development Server"
     });
+
+    c.OperationFilter<SwaggerFileUploadOperationFilter>();
 });
 
 builder.Services.AddStackExchangeRedisCache(redisOptions =>
@@ -115,7 +118,7 @@ builder.Services
 var app = builder.Build();
 
 app.UseCors("AllowAll");
-app.UseRateLimiter();
+//app.UseRateLimiter();
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>
@@ -125,6 +128,7 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseRouting();
+app.UseStaticFiles();
 
 app.UseMiddleware<API.Middleware.ActionLoggingMiddleware>();
 app.UseAuthorization();

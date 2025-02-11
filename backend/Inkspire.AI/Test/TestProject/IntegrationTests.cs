@@ -33,7 +33,6 @@ public class CommentIntegrationTests : IClassFixture<WebApplicationFactory<Progr
         {
             builder.ConfigureServices(services =>
             {
-                // Replace database with in-memory database for testing
                 var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
                 if (descriptor != null) services.Remove(descriptor);
 
@@ -63,19 +62,15 @@ public class CommentIntegrationTests : IClassFixture<WebApplicationFactory<Progr
         // Act
         var response = await _client.PostAsync("/api/Comment/create", jsonContent);
 
-        // ✅ Ensure the response is successful before parsing JSON
         Assert.True(response.IsSuccessStatusCode, $"Request failed with status code: {response.StatusCode}");
 
         var responseString = await response.Content.ReadAsStringAsync();
         _output.WriteLine($"Response: {responseString}");
 
-        // ✅ Ensure response is not empty
         Assert.False(string.IsNullOrEmpty(responseString), "Response body is empty");
 
-        // Deserialize the response only if it contains valid JSON
         var result = JsonSerializer.Deserialize<Result<CreateCommentResponse>>(responseString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-        // ✅ Additional validation to ensure parsing worked
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
 
