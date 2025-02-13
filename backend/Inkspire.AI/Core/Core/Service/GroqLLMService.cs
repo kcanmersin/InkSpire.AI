@@ -14,6 +14,7 @@ using Polly.CircuitBreaker;
 using Polly.Fallback;
 using Xamarin.UITest.Utils;
 using System.Text.RegularExpressions;
+using Core.Data.Entity.Game;
 
 namespace InkSpire.Infrastructure.Services
 {
@@ -121,6 +122,109 @@ namespace InkSpire.Infrastructure.Services
 
 
         }
+        public async Task<GameTopic> GenerateGameTopicAsync(string language)
+        {
+            var prompt = $@"
+                You are an AI language tutor. Your task is to generate a SINGLE topic strictly related to learning {language}.
+                The topic must be educational and commonly used in language learning.
+                Do NOT include extra words or explanations.
+                Output ONLY the topic in {language}, without quotes or additional formatting.";
+
+            var requestBody = new GroqChatRequest(
+                Model: _settings.Model,
+                Messages: new List<GroqMessage> { new GroqMessage("user", prompt) }
+            );
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, _settings.BaseUrl);
+            request.Headers.Add("Authorization", $"Bearer {_settings.ApiKey}");
+            request.Content = JsonContent.Create(requestBody);
+
+            try
+            {
+                var response = await _httpClient.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+                var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>();
+
+                if (chatResponse?.Choices?.Count > 0)
+                {
+                    var topic = chatResponse.Choices[0].Message.Content.Trim();
+                    return new GameTopic { Topic = topic, Language = language };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating game topic.");
+            }
+
+            return new GameTopic { Topic = "Unknown", Language = language };
+        }
+
+        public async Task<GameAnswer> CheckAnswerAsync(string word, string topic, string language)
+        {
+            var prompt = $@"
+        You are an AI language validator. Your task is to strictly check whether the given word belongs to the specified category and language.
+        - Category: {topic}
+        - Expected Language: {language}
+        - Given Word: {word}
+        Rules:
+        1. The word MUST be a valid {language} word.
+        2. The word MUST logically fit into the given category ({topic}).
+        3. Return ONLY a JSON response with a strict TRUE or FALSE.
+        4. Do NOT include explanations, extra text, or formatting.
+
+        Respond in JSON format:
+        {{
+          ""isCorrect"": true/false
+        }}";
+
+            var requestBody = new GroqChatRequest(
+                Model: _settings.Model,
+                Messages: new List<GroqMessage> { new GroqMessage("user", prompt) }
+            );
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, _settings.BaseUrl);
+            request.Headers.Add("Authorization", $"Bearer {_settings.ApiKey}");
+            request.Content = JsonContent.Create(requestBody);
+
+            try
+            {
+                var response = await _httpClient.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+
+                var chatResponse = await response.Content.ReadFromJsonAsync<GroqChatResponse>();
+                if (chatResponse?.Choices?.Count > 0)
+                {
+                    var jsonString = chatResponse.Choices[0].Message.Content.Trim();
+
+                    Console.WriteLine($"[GroqLLMService] API Raw Response: {jsonString}");
+
+                    if (jsonString.StartsWith("```json"))
+                        jsonString = jsonString[7..];
+                    if (jsonString.EndsWith("```"))
+                        jsonString = jsonString[..^3];
+
+                    jsonString = jsonString.Trim();
+
+                    using var doc = JsonDocument.Parse(jsonString);
+                    bool isCorrect = doc.RootElement.TryGetProperty("isCorrect", out var isCorrectProp)
+                                     && isCorrectProp.GetBoolean();
+
+                    return new GameAnswer { Word = word, IsCorrect = isCorrect, Feedback = null };
+                }
+            }
+            catch (JsonException jsonEx)
+            {
+                Console.WriteLine($"[GroqLLMService] JSON Parsing Error: {jsonEx.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[GroqLLMService] General Error: {ex.Message}");
+                _logger.LogError(ex, "Error checking answer.");
+            }
+
+            return new GameAnswer { Word = word, IsCorrect = false, Feedback = null };
+        }
+
 
         public async Task<string> GenerateContentAsync(string title, string language, string level)
         {

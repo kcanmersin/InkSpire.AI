@@ -15,6 +15,7 @@ namespace Core.Features.UserFeatures.GetUserDetails
         public bool IsTwoFactorEnabled { get; set; } = false;
         public string NativeLanguage { get; set; } = string.Empty;
         public string TargetLanguage { get; set; } = string.Empty;
+        public string? ProfileImageUrl { get; set; }
     }
 
     public class GetUserDetailByIdQuery : IRequest<Result<GetUserDetailByIdQueryResponse>>
@@ -48,7 +49,8 @@ namespace Core.Features.UserFeatures.GetUserDetails
                 Surname = user.Surname,
                 IsTwoFactorEnabled = user.IsTwoFactorEnabled,
                 NativeLanguage = user.NativeLanguage,
-                TargetLanguage = user.TargetLanguage
+                TargetLanguage = user.TargetLanguage,
+                ProfileImageUrl = user.ProfileImageUrl
             });
         }
     }

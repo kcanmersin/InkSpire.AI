@@ -112,7 +112,6 @@ namespace Core.Service.Storage
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogError("Cloudinary Search API çağrısı başarısız: {Response}", responseString);
                     return;
                 }
 

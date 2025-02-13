@@ -96,7 +96,7 @@ namespace Core.Features.BookFeatures.Commands.CreateBook
             //    }
             //}
             //sleep 10 second
-            await Task.Delay(3000);
+            await Task.Delay(1000);
             await _context.SaveChangesAsync(cancellationToken);
 
             var generatedTest = await _groqLLMService.GenerateTestAsync(

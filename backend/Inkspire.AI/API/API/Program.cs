@@ -138,6 +138,7 @@ app.UseEndpoints(endpoints =>
 });
 
 app.MapHub<BookHub>("/bookHub");
+app.MapHub<GameHub>("/gameHub");
 app.MapControllers();
 app.MapGraphQL();
 app.UseResponseCaching();

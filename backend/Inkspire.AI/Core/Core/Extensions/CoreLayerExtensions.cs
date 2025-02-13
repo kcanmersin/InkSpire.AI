@@ -94,10 +94,8 @@ namespace Core.Extensions
             //add
             //services.AddSingleton<WasabiS3Service>();
 
-            //localstorage
             services.AddSingleton<LocalStorageService>();
             services.AddSingleton<WasabiS3StorageService>();
-            //services.AddSingleton<CloudinaryStorageService>();
 
             services.AddScoped<CloudinaryStorageService>(); 
 

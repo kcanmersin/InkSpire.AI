@@ -1,0 +1,142 @@
+
+.draggable-modal {
+  cursor: move; /* Fare imlecini sürükleme moduna geçir */
+}
+
+.modal-content {
+  border-radius: 10px; /* Daha yuvarlak köşeler */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Daha hoş bir gölge */
+}
+
+/* Navbar Link Hover Efekti */
+/* Navbar Link Hover Efekti */
+.navbar-nav .nav-link {
+  transition: color 0.3s ease-in-out, background-color 0.3s ease-in-out;
+}
+
+.navbar-nav .nav-link:hover {
+  color: white; /* Yazı rengi beyaz */
+  background-color: #0d6efd; /* Arka plan koyu mavi */
+  border-radius: 5px; /* Yuvarlatılmış köşeler */
+}
+
+
+
+/* Header Başlık Hover */
+header h1 {
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+header h1:hover {
+  transform: scale(1.05); /* Hafif büyütme */
+  color: #ffd700; /* Altın sarısı */
+}
+
+/* Header Açıklama Yazısı Hover */
+header p {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+header p:hover {
+  transform: scale(1.02); /* Hafif büyütme */
+  opacity: 0.9; /* Hafif saydamlık */
+}
+
+/* Kitap Kartları Genel Stili */
+.hover-card {
+  background-color: #e3f2fd; /* Açık mavi arka plan */
+  border-radius: 10px; /* Köşeleri yuvarlat */
+  transition: all 0.3s ease-in-out;
+}
+
+/* Kart Hover Efekti */
+.hover-card:hover {
+  background-color: #bbdefb; /* Daha koyu bir açık mavi */
+  transform: scale(1.05); /* Hafif büyütme efekti */
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); /* Gölge efekti */
+}
+
+/* Kart İçindeki Resim */
+.hover-card img {
+  transition: transform 0.3s ease-in-out;
+  border-radius: 10px 10px 0 0; /* Resmin üst köşelerini yuvarlat */
+}
+
+/* Resim Hover Efekti */
+.hover-card:hover img {
+  transform: scale(1.1); /* Resim biraz büyür */
+}
+
+
+/* Sayfa Değiştirme Butonları */
+.pagination-btn {
+  background-color: #e3f2fd; /* Açık mavi arka plan */
+  color: #0d6efd; /* Bootstrap'in birincil rengi */
+  border: none; /* Kenarları kaldır */
+  transition: all 0.3s ease-in-out; /* Geçiş efekti */
+  width: 60px; 
+  height: 60px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  border-radius: 50%; /* Yuvarlak şekil */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Hafif gölge */
+}
+
+.pagination-btn:hover {
+  background-color: #bbdefb; /* Hover'da daha koyu mavi */
+  color: white; /* Yazı rengi beyaz */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Daha belirgin gölge */
+  transform: scale(1.1); /* Hafif büyütme */
+}
+
+.pagination-btn:disabled {
+  background-color: #f8f9fa; /* Disabled için gri arka plan */
+  color: #adb5bd; /* Disabled için gri yazı */
+  box-shadow: none; /* Gölgeyi kaldır */
+  cursor: not-allowed; /* Kullanıcıya pasif olduğunu belirt */
+}
+
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}

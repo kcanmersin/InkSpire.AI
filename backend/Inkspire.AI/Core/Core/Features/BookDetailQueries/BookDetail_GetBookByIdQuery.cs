@@ -85,9 +85,10 @@ namespace Core.Features.BookDetailQueries
             public string Text { get; set; }
             public List<ReactionDto> Reactions { get; set; } = new();
 
-            // New fields for the commenter's name & surname:
             public string UserName { get; set; }
             public string UserSurname { get; set; }
+
+            public string? ProfileImageUrl { get; set; }
         }
 
         public class ReactionDto
@@ -107,7 +108,6 @@ namespace Core.Features.BookDetailQueries
 
             public async Task<List<Response>> Handle(Query request, CancellationToken cancellationToken)
             {
-                // First, load the comment data (excluding user info):
                 var comments = await _context.Comments
                     .Include(c => c.Reactions)
                     .Where(c => c.BookId == request.BookId)
@@ -134,7 +134,7 @@ namespace Core.Features.BookDetailQueries
 
                 var userDict = await _context.Users
                     .Where(u => userIds.Contains(u.Id))
-                    .Select(u => new { u.Id, u.Name, u.Surname })
+                    .Select(u => new { u.Id, u.Name, u.Surname, u.ProfileImageUrl })
                     .ToDictionaryAsync(u => u.Id, cancellationToken);
 
                 foreach (var comment in comments)
@@ -143,6 +143,8 @@ namespace Core.Features.BookDetailQueries
                     {
                         comment.UserName = user.Name;
                         comment.UserSurname = user.Surname;
+                        comment.ProfileImageUrl = user.ProfileImageUrl;
+
                     }
                 }
 
@@ -235,7 +237,6 @@ namespace Core.Features.BookDetailQueries
                         Title = b.Title,
                         Language = b.Language,
                         Level = b.Level,
-                        //get first image
                         ImageUrl = b.Images.FirstOrDefault() != null ? Convert.ToBase64String(b.Images.FirstOrDefault().ImageData) : null
 
                     })

@@ -14,10 +14,8 @@ namespace Core.Data.Entity
         public QuestionTypes QuestionType { get; set; }
         public int Score { get; set; }
         public string Answer { get; set; }
-        //if type is multiple choice there will be choices but if type is word there will be no choices
         public List<string> Choices { get; set; } = new List<string>();
 
-        //feedback
         public string Feedback { get; set; }
 
 
